@@ -1,21 +1,25 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
-import AdminRoute from './AdminRoute'; // ✅ Import AdminRoute
+import DashboardLayout from '../layouts/DashboardLayout';
+import AdminRoute from './AdminRoute';
 
-// Page Components
+// Public Pages
 import Home from '../pages/Home';
 import About from '../pages/About';
 import Projects from '../pages/Projects';
 import Contact from '../pages/Contact';
 import Comments from '../pages/Comments';
 
-// Admin Panel Components
+// Admin Pages
 import Login from '../admin/Login';
 import Dashboard from '../admin/Dashboard';
 import ManageComments from '../admin/ManageComments';
 import ManageExperience from '../admin/ManageExperience';
+import ManageProjects from '../admin/ManageProjects';
+import ProfileSettings from '../admin/ProfileSettings';
 
 const router = createBrowserRouter([
+  // Public Routes
   {
     path: '/',
     element: <MainLayout />,
@@ -27,34 +31,24 @@ const router = createBrowserRouter([
       { path: '/comments', element: <Comments /> },
     ],
   },
-  {
-    path: '/admin/login',
-    element: <Login />,
-  },
+
+  // Admin Login
+  { path: '/admin/login', element: <Login /> },
+
+  // Admin Dashboard (Protected)
   {
     path: '/admin/dashboard',
     element: (
       <AdminRoute>
-        <Dashboard />
+        <DashboardLayout />  
       </AdminRoute>
     ),
     children: [
-      {
-        path: 'manage-comments',
-        element: (
-          <AdminRoute>
-            <ManageComments />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: 'manage-experience',
-        element: (
-          <AdminRoute>
-            <ManageExperience />
-          </AdminRoute>
-        ),
-      },
+      { index: true, element: <Dashboard /> },
+      { path: 'manage-comments', element: <ManageComments /> },
+      { path: 'manage-experience', element: <ManageExperience /> },
+      { path: 'manage-projects', element: <ManageProjects /> },
+      { path: 'profile-settings', element: <ProfileSettings /> },
     ],
   },
 ]);

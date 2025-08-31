@@ -4,11 +4,14 @@ import App from './App';
 import AuthProvider from './context/AuthProvider';
 import './index.css'; 
 
+// Toast import
+import { Toaster } from 'react-hot-toast';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
       <App />
+      <Toaster position="top-center" reverseOrder={false} />
     </AuthProvider>
   </React.StrictMode>
 );

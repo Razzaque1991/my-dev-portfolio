@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { FaLaptopCode, FaReact, FaNodeJs, FaDatabase } from "react-icons/fa";
 import { SiMongodb, SiFirebase } from "react-icons/si";
+import ManageExperience from "../admin/ManageExperience";  
 
 const About = () => {
   const skills = useMemo(
@@ -41,6 +42,7 @@ const About = () => {
       aria-labelledby="about-heading"
     >
       <div className="container mx-auto max-w-4xl">
+        {/* ---------- Heading ---------- */}
         <header className="text-center mb-12">
           <h2
             id="about-heading"
@@ -53,6 +55,7 @@ const About = () => {
           </p>
         </header>
 
+        {/* ---------- Profile & Bio ---------- */}
         <div className="bg-white rounded-xl shadow-lg p-8 sm:p-10 lg:p-12 mb-12 animate-fade-in">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="order-2 md:order-1">
@@ -82,6 +85,7 @@ const About = () => {
           </div>
         </div>
 
+        {/* ---------- Skills ---------- */}
         <div className="animate-fade-in-up">
           <h3 className="text-3xl font-bold text-center text-blue-600 mb-8">
             My Key Skills
@@ -103,8 +107,14 @@ const About = () => {
             ))}
           </ul>
         </div>
+
+        {/* ---------- Experience Section ---------- */}
+        <div className="mt-16">
+          <ManageExperience />
+        </div>
       </div>
-      {/* Custom Tailwind CSS animations can be moved to a separate CSS file for larger projects */}
+
+      {/* ---------- Animations ---------- */}
       <style>{`
         @keyframes fadeInDown {
           from { opacity: 0; transform: translateY(-20px); }

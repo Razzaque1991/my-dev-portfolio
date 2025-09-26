@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import { toast } from "react-hot-toast"; // assuming you have react-hot-toast installed
 
-const API_URL = "http://localhost:5000/api/projects";
+const API_URL = "https://my-dev-portfolio-server-psi.vercel.app/api/projects";
 
 const ManageProjects = () => {
   const { user } = useContext(AuthContext);

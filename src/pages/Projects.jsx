@@ -7,7 +7,7 @@ const Projects = () => {
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState({}); // projectId: index
 
-  const API_URL = "http://localhost:5000/api/projects";
+  const API_URL = "https://my-dev-portfolio-server-psi.vercel.app/api/projects";
 
   useEffect(() => {
     const fetchProjects = async () => {

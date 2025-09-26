@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaGithub, FaTwitter } from "react-icons/fa";
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaGithub, FaFacebook, FaInstagram } from "react-icons/fa";
 import emailjs from "@emailjs/browser";
 import { toast } from "react-hot-toast";
 
@@ -11,7 +11,7 @@ const Contact = () => {
     {
       icon: <FaEnvelope />,
       text: "razzaque.0011@gmail.com",
-      link: "mailto:mdrazzaque.dev@gmail.com",
+      link: "https://mailto:razzaque.0011@gmail.com",
       label: "Email address",
     },
     {
@@ -29,9 +29,10 @@ const Contact = () => {
   ];
 
   const socialLinks = [
-    { icon: <FaLinkedin />, url: "https://linkedin.com/in/md-abdur-razzaque", label: "LinkedIn Profile", color: "text-blue-600" },
-    { icon: <FaGithub />, url: "https://github.com/md-abdur-razzaque", label: "GitHub Profile", color: "text-gray-800" },
-    { icon: <FaTwitter />, url: "https://twitter.com/md-abdur-razzaque", label: "Twitter Profile", color: "text-blue-400" },
+   { name: "LinkedIn", icon: <FaLinkedin />, url: "https://www.linkedin.com/in/md-abdur-razzaque-7b01892b8/", color: "text-blue-600" },
+       { name: "GitHub", icon: <FaGithub />, url: "https://github.com/Razzaque1991", color: "text-gray-800 dark:text-gray-200" },
+       { name: "Facebook", icon: <FaFacebook />, url: "https://web.facebook.com/rahul.razzak/", color: "text-blue-600" },
+       { name: "Instagram", icon: <FaInstagram />, url: "https://instagram.com/md-abdur-razzaque", color: "text-pink-500" },
   ];
 
   const handleSubmit = async (e) => {

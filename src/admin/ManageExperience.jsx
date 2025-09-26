@@ -1,6 +1,4 @@
 import React, { useRef } from 'react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export default function Resume() {
   const resumeRef = useRef();
@@ -63,18 +61,6 @@ export default function Resume() {
     { title: 'Self-Learning & Practice in Web Development', org: 'Personal Projects, Online Resources, YouTube, Documentation', date: '2018 – Present' },
   ];
 
-  const handleDownload = () => {
-    const input = resumeRef.current;
-    html2canvas(input, { scale: 2 }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('Md_Abdur_Razzaque_Resume.pdf');
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-12 font-sans text-gray-800">
       <div ref={resumeRef} className="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden">
@@ -110,7 +96,7 @@ export default function Resume() {
               </div>
 
               <div className="mt-4">
-                <h4 className="font-medium">Tools & Deploy</h4>
+                <h4 className="font-medium">Tools & Deployment</h4>
                 <p className="text-xs mt-1">Git · GitHub · Vercel · Firebase Hosting</p>
               </div>
             </div>
@@ -210,10 +196,16 @@ export default function Resume() {
         </div>
       </div>
 
+      {/* Google Drive Direct Download Button */}
       <div className="max-w-4xl mx-auto mt-6">
-        <button onClick={handleDownload} className="btn btn-primary">
+        <a
+          href="https://drive.google.com/uc?export=download&id=1GFLgypz38eqpaY4IlOmgaSr8fHcmZD3U"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-primary"
+        >
           Download PDF
-        </button>
+        </a>
       </div>
     </div>
   );

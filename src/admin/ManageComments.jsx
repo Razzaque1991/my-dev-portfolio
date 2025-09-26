@@ -10,7 +10,7 @@ const ManageComments = () => {
   const [error, setError] = useState(null);
   const [token, setToken] = useState("");
 
-  const API_URL = "http://localhost:5000/api/comments";
+  const API_URL = "https://my-dev-portfolio-server-psi.vercel.app/api/comments";
 
   useEffect(() => {
     const fetchToken = async () => {

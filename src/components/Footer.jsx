@@ -1,14 +1,14 @@
 import React from "react";
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaGithub, FaTwitter } from "react-icons/fa";
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaLinkedin, FaGithub, FaFacebook, FaInstagram  } from "react-icons/fa";
 import { Link as ScrollLink } from "react-scroll"; // smooth scroll
 
 const Footer = () => {
   const year = new Date().getFullYear();
 
   const contactInfo = [
-    { icon: <FaEnvelope />, text: "mdrazzaque.dev@gmail.com", link: "mailto:mdrazzaque.dev@gmail.com" },
-    { icon: <FaPhone />, text: "+880 1234 567890", link: "tel:+8801234567890" },
-    { icon: <FaMapMarkerAlt />, text: "Dhaka, Bangladesh", link: "https://maps.google.com/?q=Dhaka,Bangladesh" },
+    { icon: <FaEnvelope />, text: "razzaque.0011@gmail.com", link: "https://mailto:razzaque.0011@gmail.com" },
+    { icon: <FaPhone />, text: "+880 1234 567890", link: "tel:+8801755202615" },
+    { icon: <FaMapMarkerAlt />, text: "Sirajgonj, Bangladesh", link: "https://maps.google.com/?q=Dhaka,Bangladesh" },
   ];
 
   const quickLinks = [
@@ -18,9 +18,10 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { name: "LinkedIn", icon: <FaLinkedin />, url: "https://linkedin.com/in/md-abdur-razzaque", color: "text-blue-600" },
-    { name: "GitHub", icon: <FaGithub />, url: "https://github.com/md-abdur-razzaque", color: "text-gray-800 dark:text-gray-200" },
-    { name: "Twitter", icon: <FaTwitter />, url: "https://twitter.com/md-abdur-razzaque", color: "text-blue-400" },
+    { name: "LinkedIn", icon: <FaLinkedin />, url: "https://www.linkedin.com/in/md-abdur-razzaque-7b01892b8/", color: "text-blue-600" },
+    { name: "GitHub", icon: <FaGithub />, url: "https://github.com/Razzaque1991", color: "text-gray-800 dark:text-gray-200" },
+    { name: "Facebook", icon: <FaFacebook />, url: "https://web.facebook.com/rahul.razzak/", color: "text-blue-600" },
+    { name: "Instagram", icon: <FaInstagram />, url: "https://instagram.com/md-abdur-razzaque", color: "text-pink-500" },
   ];
 
   return (

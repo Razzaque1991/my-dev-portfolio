@@ -8,7 +8,7 @@ const Comments = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/comments";
+  const API_URL = "https://my-dev-portfolio-server-psi.vercel.app/api/comments";
 
   // Fetch approved comments
   useEffect(() => {

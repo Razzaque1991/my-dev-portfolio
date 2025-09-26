@@ -16,7 +16,7 @@ const AuthProvider = ({ children }) => {
       setUser(currentUser);
       if (currentUser) {
         // 🔐 Send token to backend to get role
-        const { data } = await axios.get(`http://localhost:5000/users/admin/${currentUser.email}`);
+        const { data } = await axios.get(`https://my-dev-portfolio-server-psi.vercel.app/api/users/admin/${currentUser.email}`);
         setIsAdmin(data?.admin === true);
       } else {
         setIsAdmin(false);

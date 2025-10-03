@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthProvider";
-import { toast } from "react-hot-toast"; // assuming you have react-hot-toast installed
+import { toast } from "react-hot-toast";
 
 const API_URL = "https://my-dev-portfolio-server-psi.vercel.app/api/projects";
 
@@ -9,6 +9,7 @@ const ManageProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     github: "",
@@ -16,10 +17,11 @@ const ManageProjects = () => {
     technologies: "",
     description: "",
   });
-  const [images, setImages] = useState([]);
+
+  const [newImages, setNewImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [editingProject, setEditingProject] = useState(null);
 
-  // Fetch all projects on initial load
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -27,303 +29,240 @@ const ManageProjects = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) {
-        throw new Error("Failed to fetch projects.");
-      }
-      const data = await response.json();
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error("Failed to fetch projects");
+      const data = await res.json();
       setProjects(data);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      toast.error("Failed to load projects.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!user) {
-    return (
-      <div className="p-6 text-center text-red-500">
-        <p>You must be logged in to manage projects.</p>
-      </div>
-    );
-  }
+  if (!user)
+    return <p className="text-center text-red-500">You must be logged in to manage projects.</p>;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file.");
-      e.target.value = null;
+      toast.error("Select a valid image");
       return;
     }
-    if (images.length >= 4) {
-      toast.error("You can only add a maximum of 4 images.");
-      e.target.value = null;
+    if (newImages.length + existingImages.length >= 4) {
+      toast.error("Maximum 4 images allowed");
       return;
     }
-
-    setImages((prev) => [...prev, file]);
+    setNewImages((prev) => [...prev, file]);
     e.target.value = null;
   };
 
-  const handleRemoveImage = (index) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
+  const removeNewImage = (idx) => setNewImages((prev) => prev.filter((_, i) => i !== idx));
+  const removeExistingImage = (idx) => setExistingImages((prev) => prev.filter((_, i) => i !== idx));
 
   const resetForm = () => {
-    setFormData({
-      name: "",
-      github: "",
-      live: "",
-      technologies: "",
-      description: "",
-    });
-    setImages([]);
+    setFormData({ name: "", github: "", live: "", technologies: "", description: "" });
+    setNewImages([]);
+    setExistingImages([]);
     setEditingProject(null);
+  };
+
+  const uploadToImgbb = async (file) => {
+    const apiKey = "bbceb0a46ed71eac1470de839002d556";
+    const fd = new FormData();
+    fd.append("image", file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+      method: "POST",
+      body: fd,
+    });
+    const result = await res.json();
+    if (result.success) return result.data.url;
+    throw new Error(result?.error?.message || "Image upload failed");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!editingProject && images.length === 0) {
-      toast.error("Please add at least one image before submitting.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("github", formData.github);
-    data.append("live", formData.live);
-    data.append("description", formData.description);
-
-    const technologiesArray = formData.technologies
-      .split(",")
-      .map((tech) => tech.trim())
-      .filter((tech) => tech !== "");
-    data.append("technologies", JSON.stringify(technologiesArray));
-
-    images.forEach((img) => data.append("images", img));
-
     try {
-      let response;
+      if (!formData.name.trim()) {
+        toast.error("Project name is required");
+        return;
+      }
+      if (newImages.length === 0 && existingImages.length === 0) {
+        toast.error("At least one image is required");
+        return;
+      }
+
+      // Upload new images
+      const uploadedUrls = [];
+      for (let file of newImages) {
+        try {
+          const url = await uploadToImgbb(file);
+          uploadedUrls.push(url);
+        } catch (err) {
+          console.error("Image upload error:", err);
+          toast.error("Image upload failed");
+          return;
+        }
+      }
+
+      const payload = {
+        name: formData.name.trim(),
+        github: formData.github.trim() || null,
+        live: formData.live.trim() || null,
+        description: formData.description.trim() || null,
+        technologies: formData.technologies
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        images: [...existingImages, ...uploadedUrls].slice(0, 4),
+      };
+
+      console.log("Final payload:", payload);
+
+      let res;
       if (editingProject) {
-        response = await fetch(`${API_URL}/${editingProject._id}`, {
+        res = await fetch(`${API_URL}/${editingProject._id}`, {
           method: "PUT",
-          body: data,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
       } else {
-        response = await fetch(API_URL, {
+        res = await fetch(API_URL, {
           method: "POST",
-          body: data,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
       }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save project.");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Server error" }));
+        throw new Error(err.message || "Failed to save project");
       }
 
-      toast.success(editingProject ? "Project updated successfully!" : "Project added successfully!");
+      toast.success(editingProject ? "Project updated!" : "Project added!");
       resetForm();
       fetchProjects();
-    } catch (error) {
-      console.error("Submission Error:", error);
-      toast.error(error.message || "An unexpected error occurred.");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this project?")) return;
-
+    if (!window.confirm("Delete this project?")) return;
     try {
-      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      if (!response.ok) {
-        throw new Error("Failed to delete project.");
-      }
-      toast.success("Project deleted successfully!");
+      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      toast.success("Project deleted");
       fetchProjects();
-    } catch (error) {
-      console.error("Delete Error:", error);
-      toast.error(error.message || "An error occurred during deletion.");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Error");
     }
   };
 
   const handleEdit = (project) => {
     setEditingProject(project);
     setFormData({
-      name: project.name,
-      github: project.github,
-      live: project.live,
-      technologies: project.technologies.join(", "),
-      description: project.description,
+      name: project.name || "",
+      github: project.github || "",
+      live: project.live || "",
+      technologies: (project.technologies || []).join(", "),
+      description: project.description || "",
     });
-    setImages([]); // Clear images for the new update
-    window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top on edit
+    setExistingImages(project.images || []);
+    setNewImages([]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        {editingProject ? "Update Project" : "Add New Project"}
-      </h2>
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 bg-white shadow-lg rounded-xl p-6"
-        encType="multipart/form-data"
-      >
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Project Name"
-          className="w-full p-3 border rounded-md focus:ring focus:ring-blue-200"
-          required
-        />
-        <input
-          type="text"
-          name="github"
-          value={formData.github}
-          onChange={handleChange}
-          placeholder="GitHub Link"
-          className="w-full p-3 border rounded-md focus:ring focus:ring-blue-200"
-        />
-        <input
-          type="text"
-          name="live"
-          value={formData.live}
-          onChange={handleChange}
-          placeholder="Live Link"
-          className="w-full p-3 border rounded-md focus:ring focus:ring-blue-200"
-        />
-        <input
-          type="text"
-          name="technologies"
-          value={formData.technologies}
-          onChange={handleChange}
-          placeholder="Technologies (comma separated, e.g., React, Tailwind, Node.js)"
-          className="w-full p-3 border rounded-md focus:ring focus:ring-blue-200"
-        />
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Project Description"
-          className="w-full p-3 border rounded-md focus:ring focus:ring-blue-200"
-          rows={4}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileSelect}
-          className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-        />
-        {images.length > 0 && (
-          <div className="flex gap-3 flex-wrap">
-            {images.map((img, i) => (
-              <div key={i} className="relative group">
-                <img
-                  src={URL.createObjectURL(img)}
-                  alt="preview"
-                  className="w-20 h-20 object-cover rounded-md border border-gray-200"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(i)}
-                  className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  &times;
-                </button>
+      <h2 className="text-3xl font-bold mb-6 text-center">{editingProject ? "Update Project" : "Add New Project"}</h2>
+
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white shadow-lg rounded-xl p-6">
+        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Project Name" className="w-full p-3 border rounded-md" required />
+        <input type="text" name="github" value={formData.github} onChange={handleChange} placeholder="GitHub Link" className="w-full p-3 border rounded-md" />
+        <input type="text" name="live" value={formData.live} onChange={handleChange} placeholder="Live Link" className="w-full p-3 border rounded-md" />
+        <input type="text" name="technologies" value={formData.technologies} onChange={handleChange} placeholder="Technologies (comma separated)" className="w-full p-3 border rounded-md" />
+        <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Project Description" className="w-full p-3 border rounded-md" rows={4} />
+
+        <input type="file" accept="image/*" onChange={handleFileSelect} className="w-full text-sm text-gray-500" />
+
+        {existingImages.length > 0 && (
+          <div className="flex gap-3 flex-wrap mt-2">
+            {existingImages.map((url, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <img src={url} alt={`old-${i}`} className="w-24 h-24 object-cover rounded-md border" />
+                <button type="button" onClick={() => removeExistingImage(i)} className="mt-1 bg-red-600 text-white px-2 rounded-md text-sm">Remove</button>
               </div>
             ))}
           </div>
         )}
 
-        <button
-          type="submit"
-          className={`w-full py-3 rounded-md transition-colors ${
-            isSubmitting
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
-          }`}
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? "Saving..."
-            : editingProject
-            ? "Update Project"
-            : "Add Project"}
+        {newImages.length > 0 && (
+          <div className="flex gap-3 flex-wrap mt-2">
+            {newImages.map((file, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <img src={URL.createObjectURL(file)} alt={`new-${i}`} className="w-24 h-24 object-cover rounded-md border" />
+                <span className="text-sm mt-1">{file.name}</span>
+                <button type="button" onClick={() => removeNewImage(i)} className="mt-1 bg-red-600 text-white px-2 rounded-md text-sm">Remove</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button type="submit" disabled={isSubmitting} className="w-full py-3 rounded-md bg-blue-600 text-white">
+          {isSubmitting ? "Saving..." : editingProject ? "Update Project" : "Add Project"}
         </button>
-        {editingProject && (
-          <button
-            type="button"
-            onClick={resetForm}
-            className="w-full py-3 mt-2 rounded-md bg-gray-500 text-white hover:bg-gray-600 transition-colors"
-          >
-            Cancel Update
-          </button>
-        )}
+
+        {editingProject && <button type="button" onClick={resetForm} className="w-full py-3 mt-2 rounded-md bg-gray-500 text-white">Cancel Update</button>}
       </form>
-      <hr className="my-10 border-t border-gray-300" />
-      <div className="mt-10">
-        <h3 className="text-2xl font-bold mb-4">All Projects</h3>
-        {loading ? (
-          <p className="text-center text-gray-500">Loading projects...</p>
-        ) : (
-          <table className="min-w-full bg-white shadow-lg rounded-xl overflow-hidden">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border p-4 text-left font-semibold">Name</th>
-                <th className="border p-4 text-left font-semibold hidden md:table-cell">Technologies</th>
-                <th className="border p-4 text-center font-semibold">Actions</th>
+
+      <hr className="my-10 border-t" />
+
+      <h3 className="text-2xl font-bold mb-4">All Projects</h3>
+      {loading ? <p>Loading...</p> : (
+        <table className="min-w-full bg-white shadow rounded-xl overflow-hidden">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border p-4 text-left">Name</th>
+              <th className="border p-4 text-left hidden md:table-cell">Technologies</th>
+              <th className="border p-4 text-center">Images</th>
+              <th className="border p-4 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {projects.length > 0 ? projects.map((p) => (
+              <tr key={p._id} className="hover:bg-gray-50">
+                <td className="border p-4">{p.name}</td>
+                <td className="border p-4 hidden md:table-cell">{(p.technologies || []).join(", ")}</td>
+                <td className="border p-4 flex gap-2 justify-center flex-wrap">
+                  {(p.images || []).map((img, i) => (
+                    <img key={i} src={img} alt={`${p.name}-${i}`} className="w-16 h-16 object-cover rounded-md border" />
+                  ))}
+                </td>
+                <td className="border p-4 flex gap-2 justify-center">
+                  <button onClick={() => handleEdit(p)} className="bg-yellow-500 text-white px-3 py-1 rounded-md">Update</button>
+                  <button onClick={() => handleDelete(p._id)} className="bg-red-600 text-white px-3 py-1 rounded-md">Delete</button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {projects.length > 0 ? (
-                projects.map((p) => (
-                  <tr key={p._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="border p-4">{p.name}</td>
-                    <td className="border p-4 hidden md:table-cell">{p.technologies.join(", ")}</td>
-                    <td className="border p-4">
-                      <div className="flex flex-col md:flex-row gap-2 justify-center">
-                        <button
-                          onClick={() => handleEdit(p)}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded-md text-sm hover:bg-yellow-600 transition-colors"
-                        >
-                          Update
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p._id)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="3" className="text-center p-4 text-gray-500">
-                    No projects found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
+            )) : (
+              <tr>
+                <td colSpan="4" className="text-center p-4">No projects found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
